@@ -1,5 +1,6 @@
 
 #include "quickpad_app.h"
+#include "quickpad_window.h"
 
 struct _QuickpadApp {
 	GtkApplication parent;
@@ -12,7 +13,10 @@ G_DEFINE_TYPE(QuickpadApp, quickpad_app, GTK_TYPE_APPLICATION);
 static void quickpad_app_init (QuickpadApp * pApp) {}
 
 static void quickpad_app_activate (GApplication * pApp) {
+	QuickpadAppWindow * pWindow;
 
+	pWindow = quickpad_app_window_new(QUICKPAD_APP(pApp));
+	gtk_window_present (GTK_WINDOW(pWindow));
 }
 
 static void quickpad_app_class_init(QuickpadAppClass *class)

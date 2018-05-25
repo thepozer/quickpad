@@ -5,6 +5,7 @@ bin_PROGRAMS = quickpad
 quickpad_LDADD = $(QUICKPAD_LIBS)
 quickpad_SOURCES = quickpad_main.c \
 quickpad_app.c \
+quickpad_window.c \
 quickpad.gresources.h \
 quickpad.gresources.c
 
