@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/net/thepozer/quickpad">
+    <file>quickpad.wnd-main.glade</file>
+  </gresource>
+</gresources>

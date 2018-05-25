@@ -1,0 +1,3 @@
+src/quickpad_main.c
+src/quickpad_app.c
+data/quickpad.desktop.in
