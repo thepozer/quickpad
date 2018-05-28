@@ -21,6 +21,8 @@ static void quickpad_app_window_class_init (QuickpadAppWindowClass *pClass) {
 gboolean smpldt_clbk_delete_event (GtkWidget * widget, GdkEvent * event, gpointer user_data) {
 	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(widget);
 	
+	gtk_widget_destroy(widget);
+	
 	return TRUE;
 }
 
@@ -45,3 +47,43 @@ void quickpad_clbk_notebook_switch_page (GtkNotebook * ntbContent, GtkWidget * p
 */	
 }
 
+void quickpad_add_tab(QuickpadAppWindow * pWindow, gchar * pcTitle, gchar * pcContent) {
+	GtkWidget * pScrolled, * pTextView, * pLabel, * pPageChild;
+	gint iPos = -1;
+	
+	pScrolled = gtk_scrolled_window_new(NULL, NULL);
+	gtk_widget_show(pScrolled);
+	gtk_widget_set_hexpand(pScrolled, TRUE);
+	gtk_widget_set_vexpand(pScrolled, TRUE);
+
+	pTextView = gtk_text_view_new();
+	gtk_text_view_set_monospace(GTK_TEXT_VIEW (pTextView), TRUE);
+	gtk_widget_show(GTK_WIDGET(pTextView));
+	gtk_container_add(GTK_CONTAINER(pScrolled), GTK_WIDGET(pTextView));
+	
+	pLabel = gtk_label_new((pcTitle != NULL) ? pcTitle : _("New pad"));
+	gtk_widget_show(pLabel);
+	
+	iPos = gtk_notebook_append_page(pWindow->ntbContent, pScrolled, pLabel);
+	
+	pPageChild = gtk_notebook_get_nth_page(pWindow->ntbContent, iPos);
+
+}
+
+void quickpad_clbk_btn_new (GtkMenuItem *menuitem, gpointer user_data) {
+	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+	
+	quickpad_add_tab(pWindow, NULL, NULL);
+}
+
+void quickpad_clbk_btn_import (GtkMenuItem *menuitem, gpointer user_data) {
+	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+	
+	
+}
+
+void quickpad_clbk_btn_export (GtkMenuItem *menuitem, gpointer user_data) {
+	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+	
+	
+}
