@@ -59,7 +59,7 @@ static void quickpad_app_window_class_init (QuickpadAppWindowClass *pClass) {
 	pObjectClass->set_property = quickpad_app_window_set_property;
 	pObjectClass->get_property = quickpad_app_window_get_property;
 
-	arObjectProperties[PROP_TAB_COUNTER] = g_param_spec_int("tabcount", "tabcount", "Id of the next tab", 0, INT_MAX, 1, G_PARAM_READWRITE);
+	arObjectProperties[PROP_TAB_COUNTER] = g_param_spec_int("tab-counter", "tab-counter", "Id of the next tab", 0, INT_MAX, 1, G_PARAM_READWRITE);
 	g_object_class_install_properties (pObjectClass, N_PROPERTIES, arObjectProperties);
 	
 	gtk_widget_class_set_template_from_resource(GTK_WIDGET_CLASS(pClass), "/net/thepozer/quickpad/quickpad.wnd-main.glade");
@@ -83,22 +83,13 @@ QuickpadAppWindow * quickpad_app_window_new (QuickpadApp * pApp) {
 	QuickpadAppWindow * pWindow = g_object_new (QUICKPAD_TYPE_APP_WINDOW, "application", pApp, NULL);
 	GSettings * pSettings = quickpad_app_get_settings(pApp);
 	
-	g_settings_bind(pSettings, "tab-counter", pWindow, "tabcount", G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind(pSettings, "tab-counter", pWindow, "tab-counter", G_SETTINGS_BIND_DEFAULT);
 	
 	g_signal_connect(pWindow, "delete-event", G_CALLBACK(quickpad_clbk_delete_event), pWindow);
 	
-	return pWindow;
-}
-
-void quickpad_clbk_notebook_switch_page (GtkNotebook * ntbContent, GtkWidget * pChild, guint page_num, gpointer user_data) {
-	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
 	
-/*
-	pTmpEditData = g_object_get_data(G_OBJECT(pChild), "content_data");
-	if (pTmpEditData != NULL) {
-		pWindow->pEditData = pTmpEditData;
-	}
-*/	
+	
+	return pWindow;
 }
 
 void quickpad_add_tab(QuickpadAppWindow * pWindow, gchar * pcTitle, gchar * pcContent) {
@@ -128,7 +119,9 @@ void quickpad_add_tab(QuickpadAppWindow * pWindow, gchar * pcTitle, gchar * pcCo
 	
 	pPageChild = gtk_notebook_get_nth_page(pWindow->ntbContent, iPos);
 	
-	pcPath = g_strdup_printf("/net/thepozer/quickpad/tabs/%u/", pWindow->iTabCounter++);
+	
+	pcPath = g_strdup_printf("/net/thepozer/quickpad/tabs/%u/", pWindow->iTabCounter);
+	g_object_set(pWindow, "tab-counter", pWindow->iTabCounter + 1, NULL);
 	
 	pTabSettings = g_settings_new_with_path("net.thepozer.quickpad.tab", pcPath);
 	g_settings_set_string(pTabSettings, "title",   pcTitle);
