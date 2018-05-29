@@ -6,8 +6,18 @@
       <summary>Tab counter</summary>
       <description>Tab counter</description>
     </key>
+    <key name="tabs" type="as">
+      <default>[]</default>
+      <summary>Tabs id list</summary>
+      <description>Tabs id list</description>
+    </key>
   </schema>
   <schema id="net.thepozer.quickpad.tab">
+    <key name="id" type="u">
+      <default>1</default>
+      <summary>Tab id</summary>
+      <description>Tab id</description>
+    </key>
     <key name="title" type="s">
       <default>'New tab'</default>
       <summary>Tab title</summary>
