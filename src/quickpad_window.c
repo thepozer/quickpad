@@ -10,7 +10,7 @@ struct _QuickpadAppWindow {
 	GtkNotebook * ntbContent;
 	
 	guint iTabCounter;
-	GVariantBuilder * pvTabsBuilder;
+	GPtrArray * pPaTabsIds;
 };
 
 G_DEFINE_TYPE(QuickpadAppWindow, quickpad_app_window, GTK_TYPE_APPLICATION_WINDOW);
@@ -50,8 +50,13 @@ static void quickpad_app_window_get_property (GObject * object, guint property_i
 
 static GParamSpec * arObjectProperties[N_PROPERTIES] = { NULL, };
 
+void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, gchar * pcTitle, gchar * pcContent);
+void quickpad_app_window_update_tab_list (QuickpadAppWindow * pWindow);
+
 static void quickpad_app_window_init (QuickpadAppWindow *pWindow) {
 	gtk_widget_init_template(GTK_WIDGET(pWindow));
+	
+	pWindow->pPaTabsIds = g_ptr_array_new();
 }
 
 static void quickpad_app_window_class_init (QuickpadAppWindowClass *pClass) {
@@ -80,7 +85,51 @@ gboolean quickpad_clbk_delete_event (GtkWidget * widget, GdkEvent * event, gpoin
 	return TRUE;
 }
 
-void quickpad_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, gchar * pcTitle, gchar * pcContent) {
+QuickpadAppWindow * quickpad_app_window_new (QuickpadApp * pApp) {
+	QuickpadAppWindow * pWindow = g_object_new (QUICKPAD_TYPE_APP_WINDOW, "application", pApp, NULL);
+	GSettings * pSettings = quickpad_app_get_settings(pApp);
+	
+	g_settings_bind(pSettings, "tab-counter", pWindow, "tab-counter", G_SETTINGS_BIND_DEFAULT);
+	
+	g_signal_connect(pWindow, "delete-event", G_CALLBACK(quickpad_clbk_delete_event), pWindow);
+
+	GVariant * pvTabs;
+	GVariantIter * pTabsIter;
+	gchar * pcTabId = NULL;
+	
+	pvTabs = g_settings_get_value(pSettings, "tabs");
+	
+	g_variant_get (pvTabs, "as", &pTabsIter);
+	while (g_variant_iter_loop (pTabsIter, "s", &pcTabId)) {
+		g_print ("name : %s\n", pcTabId);
+		g_ptr_array_add(pWindow->pPaTabsIds, g_strdup(pcTabId));
+		quickpad_app_window_add_tab(pWindow, pcTabId, NULL, NULL);
+	}
+	
+	g_variant_iter_free (pTabsIter);
+		
+	return pWindow;
+}
+
+void quickpad_clbk_btn_new (GtkMenuItem *menuitem, gpointer user_data) {
+	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+	
+	quickpad_app_window_add_tab(pWindow, NULL, _("New pad"), "");
+}
+
+void quickpad_clbk_btn_import (GtkMenuItem *menuitem, gpointer user_data) {
+	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+	
+	
+}
+
+void quickpad_clbk_btn_export (GtkMenuItem *menuitem, gpointer user_data) {
+	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+	
+	
+}
+
+void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, gchar * pcTitle, gchar * pcContent) {
 	GSettings * pTabSettings;
 	GtkTextBuffer * pTextBuffer;
 	GtkWidget * pScrolled, * pTextView, * pLabel, * pPageChild;
@@ -117,14 +166,11 @@ void quickpad_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, gchar * pcTi
 	g_settings_bind(pTabSettings, "content", pTextBuffer, "text",  G_SETTINGS_BIND_DEFAULT);
 
 	if (!pcTabId) {
-		GVariant * pvTabs;
-		QuickpadApp * pApp = QUICKPAD_APP(gtk_window_get_application(GTK_WINDOW(pWindow)));
-		GSettings * pSettings = quickpad_app_get_settings(pApp);
+		gchar * pcNewTabId = g_strdup_printf("%u", pWindow->iTabCounter);
 		
-		g_variant_builder_add(pWindow->pvTabsBuilder, "s", g_strdup_printf("%u", pWindow->iTabCounter));
-		pvTabs = g_variant_new ("as", pWindow->pvTabsBuilder);
-		g_settings_set_value(pSettings, "tabs", pvTabs);
-		g_variant_unref(pvTabs);
+		g_ptr_array_add(pWindow->pPaTabsIds, pcNewTabId);
+		
+		quickpad_app_window_update_tab_list(pWindow);
 		
 		g_settings_set_uint(pTabSettings, "id", pWindow->iTabCounter);
 		g_settings_set_string(pTabSettings, "title",   pcTitle);
@@ -136,54 +182,20 @@ void quickpad_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, gchar * pcTi
 	g_free(pcPath);
 }
 
-QuickpadAppWindow * quickpad_app_window_new (QuickpadApp * pApp) {
-	QuickpadAppWindow * pWindow = g_object_new (QUICKPAD_TYPE_APP_WINDOW, "application", pApp, NULL);
+void quickpad_app_window_update_tab_list (QuickpadAppWindow * pWindow) {
+	QuickpadApp * pApp = QUICKPAD_APP(gtk_window_get_application(GTK_WINDOW(pWindow)));
 	GSettings * pSettings = quickpad_app_get_settings(pApp);
+	GVariantBuilder * pvTabsBuilder = NULL;
+	GVariant * pvTabs = NULL;
 	
-	g_settings_bind(pSettings, "tab-counter", pWindow, "tab-counter", G_SETTINGS_BIND_DEFAULT);
-	
-	g_signal_connect(pWindow, "delete-event", G_CALLBACK(quickpad_clbk_delete_event), pWindow);
-
-	GVariant * pvTabs;
-	GVariantIter * pTabsIter;
-	GSettings * pTabSettings;
-	gchar * pcTabId = NULL;
-	
-	pWindow->pvTabsBuilder = g_variant_builder_new (G_VARIANT_TYPE ("as"));
-	
-/*
-	g_variant_builder_add (builder, "s", "when");
-	value = g_variant_new ("as", builder);
-	g_variant_builder_unref (builder);
-*/
-	
-	pvTabs = g_settings_get_value(pSettings, "tabs");
-	
-	g_variant_get (pvTabs, "as", &pTabsIter);
-	while (g_variant_iter_loop (pTabsIter, "s", &pcTabId)) {
-		g_print ("name : %s\n", pcTabId);
-		g_variant_builder_add(pWindow->pvTabsBuilder, "s", pcTabId);
-		quickpad_add_tab(pWindow, pcTabId, NULL, NULL);
+	pvTabsBuilder = g_variant_builder_new (G_VARIANT_TYPE ("as"));
+	for(gint iIdx = 0; pWindow->pPaTabsIds->len > iIdx; iIdx++) {
+		g_variant_builder_add(pvTabsBuilder, "s", g_ptr_array_index(pWindow->pPaTabsIds, iIdx));
 	}
-	g_variant_iter_free (pTabsIter);
-		
-	return pWindow;
-}
-
-void quickpad_clbk_btn_new (GtkMenuItem *menuitem, gpointer user_data) {
-	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
 	
-	quickpad_add_tab(pWindow, NULL, _("New pad"), "");
-}
-
-void quickpad_clbk_btn_import (GtkMenuItem *menuitem, gpointer user_data) {
-	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+	pvTabs = g_variant_builder_end(pvTabsBuilder);
+	g_settings_set_value(pSettings, "tabs", pvTabs);
 	
-	
-}
-
-void quickpad_clbk_btn_export (GtkMenuItem *menuitem, gpointer user_data) {
-	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
-	
-	
+	g_variant_unref(pvTabs);
+	g_variant_builder_unref(pvTabsBuilder);
 }
