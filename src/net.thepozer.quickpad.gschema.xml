@@ -13,8 +13,8 @@
     </key>
   </schema>
   <schema id="net.thepozer.quickpad.tab">
-    <key name="id" type="u">
-      <default>1</default>
+    <key name="id" type="s">
+      <default>'1'</default>
       <summary>Tab id</summary>
       <description>Tab id</description>
     </key>

@@ -167,16 +167,15 @@ void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, g
 
 	if (!pcTabId) {
 		gchar * pcNewTabId = g_strdup_printf("%u", pWindow->iTabCounter);
+		g_object_set(pWindow, "tab-counter", pWindow->iTabCounter + 1, NULL);
 		
 		g_ptr_array_add(pWindow->pPaTabsIds, pcNewTabId);
 		
 		quickpad_app_window_update_tab_list(pWindow);
 		
-		g_settings_set_uint(pTabSettings, "id", pWindow->iTabCounter);
+		g_settings_set_string(pTabSettings, "id",      pcNewTabId);
 		g_settings_set_string(pTabSettings, "title",   pcTitle);
 		g_settings_set_string(pTabSettings, "content", pcContent);
-		
-		g_object_set(pWindow, "tab-counter", pWindow->iTabCounter + 1, NULL);
 	}
 	
 	g_free(pcPath);
