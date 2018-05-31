@@ -1,35 +1,26 @@
 # About
 
-It is a GUI client for mysql databases. It use only GTK+.
-You don't need GNOME to use it.
-
-With gmysqlcc, you can :
-
- * manage your server list
- * Execute all SQL queries you want
- * dump queries, tables, databases and servers ...
- * ... Look to the features in TODO file
-
-To simplify, do do all what you want on your mysql database server.
+It is a tabbed editor to save text on long time without file (in gsettings)
+Usefull to save temporary text along multiple working session for example
 
 # Installation
 
-Installation of gmysqlcc from source
+Installation of quickpad from source
 
 ## Download from site
 
-To download gmysqlcc from site, go to download section.
+To download quickpad from site, go to download section.
 https://github.com/thepozer/quickpad
 
 ## Download from Git
 
-To download gmysqlcc via git, type these commands in a terminal :
+To download quickpad via git, type these commands in a terminal :
 
     $ git clone https://github.com/thepozer/quickpad.git
 
 ## Compile and Install 
 
-If you have got source from git, you need to do some steps before in simplEdit directory :
+If you have got source from git, you need to do some steps before in quickpad directory :
 
     $ ./autogen.sh
 
@@ -42,9 +33,9 @@ Now it's generics configure's steps :
     $ ./configure
     $ make
 
-To install simpleedit, you need to be root. Just type : 
+To install simpleedit, just type : 
 
-    $ make install
+    $ sudo make install
 
 
 
