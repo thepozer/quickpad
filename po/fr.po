@@ -2,25 +2,27 @@
 # Copyright (C) 2018 THE gmysqlcc'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the gmysqlcc package.
 # Prolhac Didier <dev@thepozer.net>, 2018.
+# Didier Prolhac <dev@thepozer.net>, 2018.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gmysqlcc 0.5.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-05-25 11:17+0200\n"
-"PO-Revision-Date: 2018-05-22 14:07+0200\n"
-"Last-Translator: Prolhac Didier <dev@thepozer.net>\n"
-"Language-Team: French\n"
+"POT-Creation-Date: 2018-06-01 10:48+0200\n"
+"PO-Revision-Date: 2018-06-01 10:49+0200\n"
+"Last-Translator: Didier Prolhac <dev@thepozer.net>\n"
+"Language-Team: français <dev@thepozer.net>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ASCII\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Gtranslator 2.91.7\n"
 
 #: ../data/quickpad.desktop.in.h:1
 msgid "QuickPad"
-msgstr ""
+msgstr "QuickPad"
 
 #: ../data/quickpad.desktop.in.h:2
 msgid "Quick note editor"
-msgstr ""
+msgstr "Quick note editeur"
