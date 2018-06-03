@@ -11,7 +11,7 @@ IT_PROG_INTLTOOL([0.40])
 
 GLIB_GSETTINGS
 
-PKG_CHECK_MODULES([QUICKPAD], [glib-2.0 gtk+-3.0 gtksourceview-3.0], , exit)
+PKG_CHECK_MODULES([QUICKPAD], [glib-2.0 gtk+-3.0 gtksourceview-3.0 dconf], , exit)
 
 # Needed by intltool
 GETTEXT_PACKAGE=${PACKAGE_TARNAME}

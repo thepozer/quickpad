@@ -1,4 +1,7 @@
+#include <dconf.h>
+
 #include "quickpad_window.h"
+
 
 struct _QuickpadAppWindow {
 	GtkApplicationWindow parent;
@@ -107,22 +110,20 @@ QuickpadAppWindow * quickpad_app_window_new (QuickpadApp * pApp) {
 	g_settings_bind(pSettings, "tab-counter", pWindow, "tab-counter", G_SETTINGS_BIND_DEFAULT);
 	
 	g_signal_connect(pWindow, "delete-event", G_CALLBACK(quickpad_clbk_delete_event), pWindow);
-
-	GVariant * pvTabs;
-	GVariantIter * pTabsIter;
-	gchar * pcTabId = NULL;
 	
-	pvTabs = g_settings_get_value(pSettings, "tabs");
+	DConfClient * pDcnfClient;
+	gchar ** pArElements, * pcTabId;
+	gint iNbElements, iIdx;
 	
-	g_variant_get (pvTabs, "as", &pTabsIter);
-	while (g_variant_iter_loop (pTabsIter, "s", &pcTabId)) {
-		g_print ("name : %s\n", pcTabId);
-		g_hash_table_add(pWindow->pHTabsIds, g_strdup(pcTabId));
+	pDcnfClient = dconf_client_new();
+	pArElements = dconf_client_list(pDcnfClient, "/net/thepozer/quickpad/tabs/", &iNbElements);
+	for (iIdx = 0; iIdx < iNbElements; iIdx ++) {
+		pcTabId = g_strndup(pArElements[iIdx], strlen(pArElements[iIdx]) - 1);
+		g_print ("name tabs : %s\n", pcTabId);
+		g_hash_table_add(pWindow->pHTabsIds, pcTabId);
 		quickpad_app_window_add_tab(pWindow, pcTabId, NULL, NULL);
 	}
-	
-	g_variant_iter_free (pTabsIter);
-		
+
 	return pWindow;
 }
 
@@ -168,6 +169,8 @@ void quickpad_clbk_btn_cancel (GtkMenuItem *menuitem, gpointer user_data) {
 
 void quickpad_clbk_btn_close (GtkMenuItem *menuitem, gpointer user_data) {
 	QuickpadTab * pTabInfo = user_data;
+	DConfClient * pDcnfClient;
+	gchar * pcPath;
 	gint iPos = -1;
 	
 	iPos = gtk_notebook_page_num(pTabInfo->pWindow->ntbContent, pTabInfo->pPageChild);
@@ -175,8 +178,13 @@ void quickpad_clbk_btn_close (GtkMenuItem *menuitem, gpointer user_data) {
 	if (iPos >= 0) {
 		gtk_notebook_remove_page(pTabInfo->pWindow->ntbContent, iPos);
 		if (g_hash_table_remove(pTabInfo->pWindow->pHTabsIds, pTabInfo->pcTabId)) {
-			quickpad_app_window_update_tab_list(pTabInfo->pWindow);
-		
+
+			pDcnfClient = dconf_client_new();
+
+			pcPath = g_strdup_printf("/net/thepozer/quickpad/tabs/%s/", pTabInfo->pcTabId);
+			dconf_client_write_fast(pDcnfClient, pcPath, NULL, NULL);
+			g_free(pcPath);
+			
 			g_free(pTabInfo);
 		} else {
 			g_printerr("quickpad_clbk_btn_close - pcTabId : '%s' - Not found in HashTable ... \n", pTabInfo->pcTabId);
@@ -274,7 +282,6 @@ void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, g
 
 	if (bNewId) {
 		g_hash_table_add(pWindow->pHTabsIds, pcTabId);
-		quickpad_app_window_update_tab_list(pWindow);
 		
 		g_settings_set_string(pTabSettings, "id",      pcTabId);
 		g_settings_set_string(pTabSettings, "title",   pcTitle);
@@ -284,26 +291,4 @@ void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, g
 	gtk_notebook_set_current_page(pWindow->ntbContent, iPos);
 	
 	g_free(pcPath);
-}
-
-void quickpad_app_window_update_tab_list (QuickpadAppWindow * pWindow) {
-	QuickpadApp * pApp = QUICKPAD_APP(gtk_window_get_application(GTK_WINDOW(pWindow)));
-	GHashTableIter iter;
-	GSettings * pSettings = quickpad_app_get_settings(pApp);
-	GVariantBuilder * pvTabsBuilder = NULL;
-	GVariant * pvTabs = NULL;
-	gpointer pcTabId, value;
-	
-	pvTabsBuilder = g_variant_builder_new (G_VARIANT_TYPE ("as"));
-
-	g_hash_table_iter_init (&iter, pWindow->pHTabsIds);
-	while (g_hash_table_iter_next (&iter, &pcTabId, &value)) {
-		g_print("quickpad_app_window_update_tab_list - TabId : '%s'\n", pcTabId);
-		g_variant_builder_add(pvTabsBuilder, "s", pcTabId);
-	}
-	
-	pvTabs = g_variant_builder_end(pvTabsBuilder);
-	g_settings_set_value(pSettings, "tabs", pvTabs);
-	
-	g_variant_builder_unref(pvTabsBuilder);
 }
