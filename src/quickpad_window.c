@@ -9,6 +9,7 @@ struct _QuickpadAppWindow {
 	GtkWidget * btnTlbrNew;
 	GtkWidget * btnTlbrImport;
 	GtkWidget * btnTlbrExport;
+	GtkWidget * btnTlbrMenuConfig;
 	
 	GtkNotebook * ntbContent;
 	
@@ -73,9 +74,17 @@ void quickpad_clbk_btn_close(GtkMenuItem *menuitem, gpointer user_data);
 gboolean quickpad_clbk_entry_evt_keyrelease (GtkWidget *widget, GdkEventKey *event, gpointer user_data);
 
 static void quickpad_app_window_init (QuickpadAppWindow *pWindow) {
+	GtkBuilder * pBuilder;
+	GtkWidget * pMenuConfig;
+
 	gtk_widget_init_template(GTK_WIDGET(pWindow));
 	
 	pWindow->pHTabsIds = g_hash_table_new(g_str_hash, g_str_equal);
+	
+	pBuilder = gtk_builder_new_from_resource ("/net/thepozer/quickpad/quickpad.mnu-config.glade");
+	pMenuConfig = GTK_WIDGET(gtk_builder_get_object (pBuilder, "mnuConfig"));
+	gtk_menu_button_set_popup(GTK_MENU_BUTTON(pWindow->btnTlbrMenuConfig), pMenuConfig);
+	g_object_unref (pBuilder);
 }
 
 static void quickpad_app_window_class_init (QuickpadAppWindowClass *pClass) {
@@ -92,6 +101,7 @@ static void quickpad_app_window_class_init (QuickpadAppWindowClass *pClass) {
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, btnTlbrNew);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, btnTlbrImport);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, btnTlbrExport);
+	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, btnTlbrMenuConfig);
 
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, ntbContent);
 }
@@ -141,6 +151,12 @@ void quickpad_clbk_btn_import (GtkMenuItem *menuitem, gpointer user_data) {
 }
 
 void quickpad_clbk_btn_export (GtkMenuItem *menuitem, gpointer user_data) {
+	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+	
+	
+}
+
+void quickpad_clbk_btn_config (GtkMenuItem *menuitem, gpointer user_data) {
 	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
 	
 	
@@ -225,7 +241,7 @@ void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, g
 	gtk_widget_set_hexpand(pScrolled, TRUE);
 	gtk_widget_set_vexpand(pScrolled, TRUE);
 
-	pTextView = gtk_text_view_new();
+	pTextView = gtk_source_view_new();
 	gtk_text_view_set_monospace(GTK_TEXT_VIEW (pTextView), TRUE);
 	gtk_widget_show(GTK_WIDGET(pTextView));
 	gtk_container_add(GTK_CONTAINER(pScrolled), GTK_WIDGET(pTextView));

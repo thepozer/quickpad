@@ -10,10 +10,10 @@ quickpad_app.c \
 quickpad_window.c
 
 
-quickpad.gresources.c: quickpad.gresources.xml quickpad.wnd-main.glade quickpad.gresources.h
+quickpad.gresources.c: quickpad.gresources.xml quickpad.wnd-main.glade quickpad.mnu-config.glade quickpad.gresources.h
 	$(AM_V_GEN) glib-compile-resources --generate-source $<
 
-quickpad.gresources.h: quickpad.gresources.xml quickpad.wnd-main.glade
+quickpad.gresources.h: quickpad.gresources.xml quickpad.wnd-main.glade quickpad.mnu-config.glade
 	$(AM_V_GEN) glib-compile-resources --generate-header $<
 
 gsettings_SCHEMAS = net.thepozer.quickpad.gschema.xml
