@@ -70,6 +70,7 @@ void quickpad_clbk_btn_edit(GtkMenuItem *menuitem, gpointer user_data);
 void quickpad_clbk_btn_save(GtkMenuItem *menuitem, gpointer user_data);
 void quickpad_clbk_btn_cancel(GtkMenuItem *menuitem, gpointer user_data);
 void quickpad_clbk_btn_close(GtkMenuItem *menuitem, gpointer user_data);
+gboolean quickpad_clbk_entry_evt_keyrelease (GtkWidget *widget, GdkEventKey *event, gpointer user_data);
 
 static void quickpad_app_window_init (QuickpadAppWindow *pWindow) {
 	gtk_widget_init_template(GTK_WIDGET(pWindow));
@@ -151,6 +152,7 @@ void quickpad_clbk_btn_edit(GtkMenuItem *menuitem, gpointer user_data) {
 	gtk_entry_set_text(GTK_ENTRY(pTabInfo->pTxtLabel), gtk_label_get_label(GTK_LABEL(pTabInfo->pLabel)));
 	gtk_widget_hide(pTabInfo->pHBoxShow);
 	gtk_widget_show(pTabInfo->pHBoxEdit);
+	gtk_widget_grab_focus(pTabInfo->pTxtLabel);
 }
 
 void quickpad_clbk_btn_save (GtkMenuItem *menuitem, gpointer user_data) {
@@ -190,6 +192,20 @@ void quickpad_clbk_btn_close (GtkMenuItem *menuitem, gpointer user_data) {
 			g_printerr("quickpad_clbk_btn_close - pcTabId : '%s' - Not found in HashTable ... \n", pTabInfo->pcTabId);
 		}
 	}
+}
+
+gboolean quickpad_clbk_entry_evt_keyrelease (GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
+	QuickpadTab * pTabInfo = user_data;
+	
+	if (event->keyval == GDK_KEY_Return) {
+		quickpad_clbk_btn_save(NULL, user_data);
+		return TRUE;
+	} else if (event->keyval == GDK_KEY_Escape) {
+		quickpad_clbk_btn_cancel(NULL, user_data);
+		return TRUE;
+	}
+	
+	return FALSE;
 }
 
 void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, gchar * pcTitle, gchar * pcContent) {
@@ -272,6 +288,7 @@ void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, g
 	g_signal_connect(pBtnSave,   "clicked", G_CALLBACK(quickpad_clbk_btn_save),   pTabInfo);
 	g_signal_connect(pBtnCancel, "clicked", G_CALLBACK(quickpad_clbk_btn_cancel), pTabInfo);
 	g_signal_connect(pBtnClose,  "clicked", G_CALLBACK(quickpad_clbk_btn_close),  pTabInfo);
+	g_signal_connect(pTabInfo->pTxtLabel, "key-release-event",  G_CALLBACK(quickpad_clbk_entry_evt_keyrelease), pTabInfo);
 	g_object_set_data(G_OBJECT(pTabInfo->pPageChild), "tab_id", pcTabId);
 	
 	pcPath = g_strdup_printf("/net/thepozer/quickpad/tabs/%s/", pcTabId);
