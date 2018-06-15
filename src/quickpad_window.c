@@ -9,7 +9,10 @@ struct _QuickpadAppWindow {
 	GtkWidget * btnTlbrNew;
 	GtkWidget * btnTlbrImport;
 	GtkWidget * btnTlbrExport;
-	GtkWidget * btnTlbrMenuConfig;
+	GtkWidget * btnTlbrMnuConfig;
+	
+	GtkCheckMenuItem * mnuLineNumbers;
+	GtkCheckMenuItem * mnuHighlightCurrentLine;
 	
 	GtkNotebook * ntbContent;
 	
@@ -76,15 +79,10 @@ gboolean quickpad_clbk_entry_evt_keyrelease (GtkWidget *widget, GdkEventKey *eve
 static void quickpad_app_window_init (QuickpadAppWindow *pWindow) {
 	GtkBuilder * pBuilder;
 	GtkWidget * pMenuConfig;
-
+	
 	gtk_widget_init_template(GTK_WIDGET(pWindow));
 	
 	pWindow->pHTabsIds = g_hash_table_new(g_str_hash, g_str_equal);
-	
-	pBuilder = gtk_builder_new_from_resource ("/net/thepozer/quickpad/quickpad.mnu-config.glade");
-	pMenuConfig = GTK_WIDGET(gtk_builder_get_object (pBuilder, "mnuConfig"));
-	gtk_menu_button_set_popup(GTK_MENU_BUTTON(pWindow->btnTlbrMenuConfig), pMenuConfig);
-	g_object_unref (pBuilder);
 }
 
 static void quickpad_app_window_class_init (QuickpadAppWindowClass *pClass) {
@@ -101,8 +99,11 @@ static void quickpad_app_window_class_init (QuickpadAppWindowClass *pClass) {
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, btnTlbrNew);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, btnTlbrImport);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, btnTlbrExport);
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, btnTlbrMenuConfig);
+	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, btnTlbrMnuConfig);
 
+	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, mnuLineNumbers);
+	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, mnuHighlightCurrentLine);
+	
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, ntbContent);
 }
 
@@ -119,6 +120,8 @@ QuickpadAppWindow * quickpad_app_window_new (QuickpadApp * pApp) {
 	GSettings * pSettings = quickpad_app_get_settings(pApp);
 	
 	g_settings_bind(pSettings, "tab-counter", pWindow, "tab-counter", G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind(pSettings, "line-numbers", pWindow->mnuLineNumbers, "active", G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind(pSettings, "highlight-current-line", pWindow->mnuHighlightCurrentLine, "active", G_SETTINGS_BIND_DEFAULT);
 	
 	g_signal_connect(pWindow, "delete-event", G_CALLBACK(quickpad_clbk_delete_event), pWindow);
 	
@@ -136,6 +139,32 @@ QuickpadAppWindow * quickpad_app_window_new (QuickpadApp * pApp) {
 	}
 
 	return pWindow;
+}
+
+void quickpad_clbk_mnu_about (GtkMenuItem *menuitem, gpointer user_data) {
+	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+	const gchar * pcAuthors[] = {
+		PACKAGE_BUGREPORT,
+		NULL
+	};
+	
+	gtk_show_about_dialog (GTK_WINDOW(pWindow),
+		"authors", pcAuthors,
+		"comments", _("Small/simple notes editor.\nDon't have to save them manualy"),
+		"copyright", _("(c) 2018 Didier Prolhac"),
+		"license", _("MIT"),
+		"license-type", GTK_LICENSE_MIT_X11,
+		"program-name", PACKAGE_NAME,
+		"version", PACKAGE_VERSION,
+		"website", "https://quickpad.thepozer.net/",
+		"website-label", _("QuickPad"),
+		NULL);
+}
+
+void quickpad_clbk_mnu_quit (GtkMenuItem *menuitem, gpointer user_data) {
+	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+	
+	quickpad_app_quit(QUICKPAD_APP(gtk_window_get_application(GTK_WINDOW(pWindow))));
 }
 
 void quickpad_clbk_btn_new (GtkMenuItem *menuitem, gpointer user_data) {
@@ -227,7 +256,7 @@ gboolean quickpad_clbk_entry_evt_keyrelease (GtkWidget *widget, GdkEventKey *eve
 void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, gchar * pcTitle, gchar * pcContent) {
 	GtkWidget * pScrolled, * pTextView, * pHBox, * pBtnEdit, * pBtnClose, * pBtnSave, * pBtnCancel;
 	GtkTextBuffer * pTextBuffer;
-	GSettings * pTabSettings;
+	GSettings * pSettings, * pTabSettings;
 	QuickpadTab * pTabInfo = NULL;
 	gchar * pcPath = NULL;
 	gint iPos = -1;
@@ -312,6 +341,11 @@ void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, g
 
 	g_settings_bind(pTabSettings, "title",   pTabInfo->pLabel, "label", G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(pTabSettings, "content", pTextBuffer,      "text",  G_SETTINGS_BIND_DEFAULT);
+
+	pSettings = quickpad_app_get_settings(QUICKPAD_APP(gtk_window_get_application(GTK_WINDOW(pWindow))));
+	
+	g_settings_bind (pSettings, "line-numbers", pTextView, "show-line-numbers", G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (pSettings, "highlight-current-line", pTextView, "highlight-current-line", G_SETTINGS_BIND_DEFAULT);
 
 	if (bNewId) {
 		g_hash_table_add(pWindow->pHTabsIds, pcTabId);

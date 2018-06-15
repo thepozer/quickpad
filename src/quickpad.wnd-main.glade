@@ -17,6 +17,56 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-save-as</property>
   </object>
+  <object class="GtkMenu" id="menuConfig">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkCheckMenuItem" id="mnuLineNumbers">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Line numbers</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkCheckMenuItem" id="mnuHighlightCurrentLine">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Highlight current line</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="mnuAbout">
+        <property name="label">gtk-about</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+        <signal name="activate" handler="quickpad_clbk_mnu_about" object="QuickpadAppWindow" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="mnuQuit">
+        <property name="label">gtk-quit</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+        <signal name="activate" handler="quickpad_clbk_mnu_quit" object="QuickpadAppWindow" swapped="no"/>
+      </object>
+    </child>
+  </object>
   <template class="QuickpadAppWindow" parent="GtkApplicationWindow">
     <property name="can_focus">False</property>
     <property name="default_width">600</property>
@@ -30,16 +80,17 @@
         <property name="has_subtitle">False</property>
         <property name="show_close_button">True</property>
         <child>
-          <object class="GtkMenuButton" id="btnTlbrMenuConfig">
+          <object class="GtkMenuButton" id="btnTlbrMnuConfig">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <property name="popup">menuConfig</property>
             <property name="use_popover">False</property>
             <child>
-              <object class="GtkImage" id="imgMenuConfig">
+              <object class="GtkImage">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="stock">gtk-execute</property>
+                <property name="icon_name">format-justify-fill</property>
               </object>
             </child>
           </object>

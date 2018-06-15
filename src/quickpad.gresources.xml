@@ -2,6 +2,5 @@
 <gresources>
   <gresource prefix="/net/thepozer/quickpad">
     <file>quickpad.wnd-main.glade</file>
-    <file>quickpad.mnu-config.glade</file>
   </gresource>
 </gresources>
