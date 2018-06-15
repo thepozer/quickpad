@@ -1,3 +1,5 @@
 src/quickpad_main.c
 src/quickpad_app.c
+src/quickpad_window.c
+src/quickpad.wnd-main.glade
 data/quickpad.desktop.in

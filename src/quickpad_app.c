@@ -16,7 +16,7 @@ static void quickpad_app_activate (GApplication * pApp) {
 	QuickpadAppWindow * pWindow;
 
 	pWindow = quickpad_app_window_new(QUICKPAD_APP(pApp));
-	gtk_window_present (GTK_WINDOW(pWindow));
+	gtk_window_present(GTK_WINDOW(pWindow));
 }
 
 static void quickpad_app_class_init(QuickpadAppClass *class)
@@ -27,7 +27,7 @@ static void quickpad_app_class_init(QuickpadAppClass *class)
 QuickpadApp * quickpad_app_new (void) {
 	QuickpadApp * pApp = NULL;
 	
-	pApp = g_object_new (QUICKPAD_TYPE_APP, "application-id", "net.thepozer.quickpad", "flags", G_APPLICATION_HANDLES_OPEN, NULL);
+	pApp = g_object_new (QUICKPAD_TYPE_APP, "application-id", "net.thepozer.quickpad", "flags", NULL, NULL);
 			
 	pApp->pSettings = g_settings_new ("net.thepozer.quickpad");
 	

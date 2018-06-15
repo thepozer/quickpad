@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gmysqlcc 0.5.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-06-01 10:48+0200\n"
-"PO-Revision-Date: 2018-06-01 10:49+0200\n"
+"POT-Creation-Date: 2018-06-13 10:59+0200\n"
+"PO-Revision-Date: 2018-06-13 11:00+0200\n"
 "Last-Translator: Didier Prolhac <dev@thepozer.net>\n"
 "Language-Team: français <dev@thepozer.net>\n"
 "Language: fr\n"
@@ -19,10 +19,26 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Generator: Gtranslator 2.91.7\n"
 
+#: ../src/quickpad_window.c:144
+msgid "New pad"
+msgstr "Nouveau pad"
+
+#: ../src/quickpad.mnu-config.glade.h:1
+msgid "Line numbers"
+msgstr "Numéros de lignes"
+
+#: ../src/quickpad.mnu-config.glade.h:2
+msgid "Highlight current line"
+msgstr "Surligne la ligne courante"
+
+#: ../src/quickpad.wnd-main.glade.h:1
+msgid "Quickpad"
+msgstr "Quickpad"
+
 #: ../data/quickpad.desktop.in.h:1
 msgid "QuickPad"
 msgstr "QuickPad"
 
 #: ../data/quickpad.desktop.in.h:2
 msgid "Quick note editor"
-msgstr "Quick note editeur"
+msgstr "Editeur de note rapide"
