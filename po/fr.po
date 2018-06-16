@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gmysqlcc 0.5.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-06-13 10:59+0200\n"
-"PO-Revision-Date: 2018-06-13 11:00+0200\n"
+"POT-Creation-Date: 2018-06-17 00:27+0200\n"
+"PO-Revision-Date: 2018-06-17 00:30+0200\n"
 "Last-Translator: Didier Prolhac <dev@thepozer.net>\n"
 "Language-Team: français <dev@thepozer.net>\n"
 "Language: fr\n"
@@ -19,25 +19,75 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Generator: Gtranslator 2.91.7\n"
 
-#: ../src/quickpad_window.c:144
+#: ../src/quickpad_window.c:155
+msgid ""
+"Small/simple notes editor.\n"
+"Don't have to save them manualy"
+msgstr ""
+"Simple et petit éditeur de notes.\n"
+"Pas besoin de les enregistrer manuellement"
+
+#: ../src/quickpad_window.c:156
+msgid "(c) 2018 Didier Prolhac"
+msgstr "(c) 2018 Didier Prolhac"
+
+#: ../src/quickpad_window.c:157
+msgid "MIT"
+msgstr "MIT"
+
+#: ../src/quickpad_window.c:162 ../data/quickpad.desktop.in.h:1
+msgid "QuickPad"
+msgstr "QuickPad"
+
+#: ../src/quickpad_window.c:175
 msgid "New pad"
 msgstr "Nouveau pad"
 
-#: ../src/quickpad.mnu-config.glade.h:1
+#: ../src/quickpad_window.c:192
+#, c-format
+msgid "Error importing file '%s' : (%i) %s"
+msgstr "Error importing file '%s' : (%i) %s"
+
+#: ../src/quickpad_window.c:208
+#, c-format
+msgid "Error writing export '%s' : (%i) %s"
+msgstr "Error writing export '%s' : (%i) %s"
+
+#: ../src/quickpad_window.c:254
+msgid "Open File"
+msgstr "Ouvrir un fichier"
+
+#: ../src/quickpad_window.c:255 ../src/quickpad_window.c:258
+msgid "_Cancel"
+msgstr "_Annuler"
+
+#: ../src/quickpad_window.c:255
+msgid "_Open"
+msgstr "_Ouvrir"
+
+#: ../src/quickpad_window.c:257
+msgid "Save File"
+msgstr "Enregistre un fichier"
+
+#: ../src/quickpad_window.c:258
+msgid "_Save"
+msgstr "_Enregistrer"
+
+#: ../src/quickpad_window.c:266
+msgid "New file"
+msgstr "Nouveau fichier"
+
+#: ../src/quickpad.wnd-main.glade.h:1
 msgid "Line numbers"
 msgstr "Numéros de lignes"
 
-#: ../src/quickpad.mnu-config.glade.h:2
+#: ../src/quickpad.wnd-main.glade.h:2
 msgid "Highlight current line"
 msgstr "Surligne la ligne courante"
 
-#: ../src/quickpad.wnd-main.glade.h:1
+#: ../src/quickpad.wnd-main.glade.h:3
 msgid "Quickpad"
 msgstr "Quickpad"
-
-#: ../data/quickpad.desktop.in.h:1
-msgid "QuickPad"
-msgstr "QuickPad"
 
 #: ../data/quickpad.desktop.in.h:2
 msgid "Quick note editor"

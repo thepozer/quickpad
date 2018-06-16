@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-06-13 10:59+0200\n"
+"POT-Creation-Date: 2018-06-17 00:27+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,24 +17,72 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/quickpad_window.c:144
+#: ../src/quickpad_window.c:155
+msgid ""
+"Small/simple notes editor.\n"
+"Don't have to save them manualy"
+msgstr ""
+
+#: ../src/quickpad_window.c:156
+msgid "(c) 2018 Didier Prolhac"
+msgstr ""
+
+#: ../src/quickpad_window.c:157
+msgid "MIT"
+msgstr ""
+
+#: ../src/quickpad_window.c:162 ../data/quickpad.desktop.in.h:1
+msgid "QuickPad"
+msgstr ""
+
+#: ../src/quickpad_window.c:175
 msgid "New pad"
 msgstr ""
 
-#: ../src/quickpad.mnu-config.glade.h:1
-msgid "Line numbers"
+#: ../src/quickpad_window.c:192
+#, c-format
+msgid "Error importing file '%s' : (%i) %s"
 msgstr ""
 
-#: ../src/quickpad.mnu-config.glade.h:2
-msgid "Highlight current line"
+#: ../src/quickpad_window.c:208
+#, c-format
+msgid "Error writing export '%s' : (%i) %s"
+msgstr ""
+
+#: ../src/quickpad_window.c:254
+msgid "Open File"
+msgstr ""
+
+#: ../src/quickpad_window.c:255 ../src/quickpad_window.c:258
+msgid "_Cancel"
+msgstr ""
+
+#: ../src/quickpad_window.c:255
+msgid "_Open"
+msgstr ""
+
+#: ../src/quickpad_window.c:257
+msgid "Save File"
+msgstr ""
+
+#: ../src/quickpad_window.c:258
+msgid "_Save"
+msgstr ""
+
+#: ../src/quickpad_window.c:266
+msgid "New file"
 msgstr ""
 
 #: ../src/quickpad.wnd-main.glade.h:1
-msgid "Quickpad"
+msgid "Line numbers"
 msgstr ""
 
-#: ../data/quickpad.desktop.in.h:1
-msgid "QuickPad"
+#: ../src/quickpad.wnd-main.glade.h:2
+msgid "Highlight current line"
+msgstr ""
+
+#: ../src/quickpad.wnd-main.glade.h:3
+msgid "Quickpad"
 msgstr ""
 
 #: ../data/quickpad.desktop.in.h:2

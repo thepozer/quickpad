@@ -27,6 +27,7 @@ typedef struct _QuickpadTab {
 	GtkWidget * pHBoxEdit;
 	GtkWidget * pLabel;
 	GtkWidget * pTxtLabel;
+	GtkWidget * pTextView;
 	gchar * pcTabId;
 } QuickpadTab;
 
@@ -69,6 +70,7 @@ static GParamSpec * arObjectProperties[N_PROPERTIES] = { NULL, };
 
 void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, gchar * pcTitle, gchar * pcContent);
 void quickpad_app_window_update_tab_list (QuickpadAppWindow * pWindow);
+gchar * quickpad_app_window_select_name(QuickpadAppWindow * pWindow, GtkFileChooserAction action, gchar * pcFilename);
 
 void quickpad_clbk_btn_edit(GtkMenuItem *menuitem, gpointer user_data);
 void quickpad_clbk_btn_save(GtkMenuItem *menuitem, gpointer user_data);
@@ -175,15 +177,106 @@ void quickpad_clbk_btn_new (GtkMenuItem *menuitem, gpointer user_data) {
 
 void quickpad_clbk_btn_import (GtkMenuItem *menuitem, gpointer user_data) {
 	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+	GFile * pFile = NULL;
+	GError * pErr = NULL;
+	gchar * pcFilename = NULL, * pcTitle = NULL, * pcContent = NULL;
 	
+	pcFilename = quickpad_app_window_select_name(pWindow, GTK_FILE_CHOOSER_ACTION_OPEN, NULL);
+	pFile = g_file_new_for_path(pcFilename);
+	pcTitle = g_file_get_basename(pFile);
 	
+	if (g_file_load_contents(pFile, NULL, &pcContent, NULL, NULL, &pErr)) {
+		quickpad_app_window_add_tab(pWindow, NULL, pcTitle, pcContent);
+		g_free(pcContent);
+	} else {
+		g_printerr(_("Error importing file '%s' : (%i) %s"), pcFilename, pErr->code, pErr->message);
+	}
+	
+	g_free(pcTitle);
+	g_free(pcFilename);
+}
+
+void quickpad_clbk_btn_export_cb_async (GObject *source_object, GAsyncResult *res, gpointer user_data) {
+	GtkSourceFileSaver * pSrcFileSaver = GTK_SOURCE_FILE_SAVER(source_object);
+	gchar * pcFilename = user_data;
+	GError * pErr = NULL;
+	gboolean success = FALSE;
+
+	success = gtk_source_file_saver_save_finish(pSrcFileSaver, res, &pErr);
+
+	if (!success) {
+		g_printerr(_("Error writing export '%s' : (%i) %s"), pcFilename, pErr->code, pErr->message);
+	}
+	
+	g_free(pcFilename);
 }
 
 void quickpad_clbk_btn_export (GtkMenuItem *menuitem, gpointer user_data) {
 	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+	GtkTextBuffer * pTextBuffer = NULL;
+	GtkSourceFileSaver * pSrcFileSaver = NULL;
+	GtkSourceFile * pSrcFile = NULL;
+	GtkWidget * pPageChild = NULL;
+	QuickpadTab * pTabInfo = NULL;
+	GFile * pFile = NULL;
+	gchar * pcFilename = NULL;
+	gint iNumPage = -1;
 	
-	
+	iNumPage = gtk_notebook_get_current_page(pWindow->ntbContent);
+	if (iNumPage >= 0) {
+		pPageChild = gtk_notebook_get_nth_page(pWindow->ntbContent, iNumPage);
+		if (pPageChild != NULL) {
+			pTabInfo = g_object_get_data(G_OBJECT(pPageChild), "tab_info");
+			if (pTabInfo != NULL) {
+				pcFilename = quickpad_app_window_select_name(pWindow, GTK_FILE_CHOOSER_ACTION_SAVE, NULL);
+				g_print("Export file : '%s'.\n", pcFilename);
+				
+				pTextBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(pTabInfo->pTextView));
+				pFile = g_file_new_for_path(pcFilename);
+				pSrcFile = gtk_source_file_new();
+				gtk_source_file_set_location(pSrcFile, pFile);
+				
+				pSrcFileSaver = gtk_source_file_saver_new(GTK_SOURCE_BUFFER(pTextBuffer), pSrcFile);
+				
+				gtk_source_file_saver_save_async(pSrcFileSaver, G_PRIORITY_DEFAULT, NULL, NULL, NULL, NULL, quickpad_clbk_btn_export_cb_async, pcFilename);
+			}
+		}
+	}
 }
+
+gchar * quickpad_app_window_select_name(QuickpadAppWindow * pWindow, GtkFileChooserAction action, gchar * pcFilename) {
+    GtkWidget * pDlgFile = NULL;
+    gchar * pcNewFilename = NULL;
+    gint iResult = 0;
+    gboolean bSelectName = FALSE;
+    
+    if (action == GTK_FILE_CHOOSER_ACTION_OPEN) {
+        pDlgFile = gtk_file_chooser_dialog_new (_("Open File"), GTK_WINDOW(pWindow), GTK_FILE_CHOOSER_ACTION_OPEN, 
+                    _("_Cancel"), GTK_RESPONSE_CANCEL, _("_Open"), GTK_RESPONSE_ACCEPT, NULL);
+    } else if (action == GTK_FILE_CHOOSER_ACTION_SAVE) {
+        pDlgFile = gtk_file_chooser_dialog_new (_("Save File"), GTK_WINDOW(pWindow), GTK_FILE_CHOOSER_ACTION_SAVE,
+                    _("_Cancel"), GTK_RESPONSE_CANCEL, _("_Save"), GTK_RESPONSE_ACCEPT, NULL);
+		gtk_file_chooser_set_create_folders(GTK_FILE_CHOOSER(pDlgFile), TRUE);
+	}
+    
+    if (pDlgFile) {
+        if (pcFilename) {
+            gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(pDlgFile), pcFilename);
+        } else if (action == GTK_FILE_CHOOSER_ACTION_SAVE) {
+            gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(pDlgFile), _("New file"));
+        }
+        
+		iResult = gtk_dialog_run (GTK_DIALOG (pDlgFile));
+	    
+        if (iResult == GTK_RESPONSE_ACCEPT) {
+			pcNewFilename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(pDlgFile));
+        }
+        gtk_widget_destroy (pDlgFile);
+    }
+    
+    return pcNewFilename;
+}
+
 
 void quickpad_clbk_btn_config (GtkMenuItem *menuitem, gpointer user_data) {
 	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
@@ -254,7 +347,7 @@ gboolean quickpad_clbk_entry_evt_keyrelease (GtkWidget *widget, GdkEventKey *eve
 }
 
 void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, gchar * pcTitle, gchar * pcContent) {
-	GtkWidget * pScrolled, * pTextView, * pHBox, * pBtnEdit, * pBtnClose, * pBtnSave, * pBtnCancel;
+	GtkWidget * pScrolled, * pHBox, * pBtnEdit, * pBtnClose, * pBtnSave, * pBtnCancel;
 	GtkTextBuffer * pTextBuffer;
 	GSettings * pSettings, * pTabSettings;
 	QuickpadTab * pTabInfo = NULL;
@@ -270,12 +363,12 @@ void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, g
 	gtk_widget_set_hexpand(pScrolled, TRUE);
 	gtk_widget_set_vexpand(pScrolled, TRUE);
 
-	pTextView = gtk_source_view_new();
-	gtk_text_view_set_monospace(GTK_TEXT_VIEW (pTextView), TRUE);
-	gtk_widget_show(GTK_WIDGET(pTextView));
-	gtk_container_add(GTK_CONTAINER(pScrolled), GTK_WIDGET(pTextView));
+	pTabInfo->pTextView = gtk_source_view_new();
+	gtk_text_view_set_monospace(GTK_TEXT_VIEW (pTabInfo->pTextView), TRUE);
+	gtk_widget_show(GTK_WIDGET(pTabInfo->pTextView));
+	gtk_container_add(GTK_CONTAINER(pScrolled), GTK_WIDGET(pTabInfo->pTextView));
 	
-	pTextBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(pTextView));
+	pTextBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(pTabInfo->pTextView));
 	
 	pHBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 	gtk_widget_show(pHBox);
@@ -334,7 +427,7 @@ void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, g
 	g_signal_connect(pBtnCancel, "clicked", G_CALLBACK(quickpad_clbk_btn_cancel), pTabInfo);
 	g_signal_connect(pBtnClose,  "clicked", G_CALLBACK(quickpad_clbk_btn_close),  pTabInfo);
 	g_signal_connect(pTabInfo->pTxtLabel, "key-release-event",  G_CALLBACK(quickpad_clbk_entry_evt_keyrelease), pTabInfo);
-	g_object_set_data(G_OBJECT(pTabInfo->pPageChild), "tab_id", pcTabId);
+	g_object_set_data(G_OBJECT(pTabInfo->pPageChild), "tab_info", pTabInfo);
 	
 	pcPath = g_strdup_printf("/net/thepozer/quickpad/tabs/%s/", pcTabId);
 	pTabSettings = g_settings_new_with_path("net.thepozer.quickpad.tab", pcPath);
@@ -344,8 +437,8 @@ void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, g
 
 	pSettings = quickpad_app_get_settings(QUICKPAD_APP(gtk_window_get_application(GTK_WINDOW(pWindow))));
 	
-	g_settings_bind (pSettings, "line-numbers", pTextView, "show-line-numbers", G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind (pSettings, "highlight-current-line", pTextView, "highlight-current-line", G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (pSettings, "line-numbers", pTabInfo->pTextView, "show-line-numbers", G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (pSettings, "highlight-current-line", pTabInfo->pTextView, "highlight-current-line", G_SETTINGS_BIND_DEFAULT);
 
 	if (bNewId) {
 		g_hash_table_add(pWindow->pHTabsIds, pcTabId);

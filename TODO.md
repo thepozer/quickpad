@@ -1,9 +1,7 @@
 # Todo
 
-* import tab from file
-* export tab into file
-* sync tab from file at opening & saving
-* sync tab on file update
+* sync tab from file at opening & saving (waiting if needed ...)
+* sync tab on file update (waiting if needed ...)
 
 # Done
 
@@ -12,3 +10,5 @@
 * Edit tab title
 * fully remove tab in gsettings
 * add some editing options
+* import tab from file
+* export tab into file
