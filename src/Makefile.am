@@ -1,8 +1,8 @@
-AM_CFLAGS = $(QUICKPAD_CFLAGS) -rdynamic
+AM_CFLAGS = $(GTK_CFLAGS) $(SOURCEVIEW_CFLAGS) $(DCONF_CFLAGS) -rdynamic
 AM_CPPFLAGS = -DLOCALEDIR=\""$(localedir)"\"
 bin_PROGRAMS = quickpad
 
-quickpad_LDADD = $(QUICKPAD_LIBS)
+quickpad_LDADD = $(GTK_LIBS) $(SOURCEVIEW_LIBS) $(DCONF_LIBS)
 quickpad_SOURCES = quickpad.gresources.h \
 quickpad.gresources.c \
 quickpad_main.c \
