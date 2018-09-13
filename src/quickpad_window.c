@@ -182,18 +182,20 @@ void quickpad_clbk_btn_import (GtkMenuItem *menuitem, gpointer user_data) {
 	gchar * pcFilename = NULL, * pcTitle = NULL, * pcContent = NULL;
 	
 	pcFilename = quickpad_app_window_select_name(pWindow, GTK_FILE_CHOOSER_ACTION_OPEN, NULL);
-	pFile = g_file_new_for_path(pcFilename);
-	pcTitle = g_file_get_basename(pFile);
-	
-	if (g_file_load_contents(pFile, NULL, &pcContent, NULL, NULL, &pErr)) {
-		quickpad_app_window_add_tab(pWindow, NULL, pcTitle, pcContent);
-		g_free(pcContent);
-	} else {
-		g_printerr(_("Error importing file '%s' : (%i) %s"), pcFilename, pErr->code, pErr->message);
+	if (pcFilename != NULL) {
+	    pFile = g_file_new_for_path(pcFilename);
+	    pcTitle = g_file_get_basename(pFile);
+	    
+	    if (g_file_load_contents(pFile, NULL, &pcContent, NULL, NULL, &pErr)) {
+		    quickpad_app_window_add_tab(pWindow, NULL, pcTitle, pcContent);
+		    g_free(pcContent);
+	    } else {
+		    g_printerr(_("Error importing file '%s' : (%i) %s"), pcFilename, pErr->code, pErr->message);
+	    }
+	    
+	    g_free(pcTitle);
+    	g_free(pcFilename);
 	}
-	
-	g_free(pcTitle);
-	g_free(pcFilename);
 }
 
 void quickpad_clbk_btn_export_cb_async (GObject *source_object, GAsyncResult *res, gpointer user_data) {
@@ -229,16 +231,19 @@ void quickpad_clbk_btn_export (GtkMenuItem *menuitem, gpointer user_data) {
 			pTabInfo = g_object_get_data(G_OBJECT(pPageChild), "tab_info");
 			if (pTabInfo != NULL) {
 				pcFilename = quickpad_app_window_select_name(pWindow, GTK_FILE_CHOOSER_ACTION_SAVE, NULL);
-				g_print("Export file : '%s'.\n", pcFilename);
 				
-				pTextBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(pTabInfo->pTextView));
-				pFile = g_file_new_for_path(pcFilename);
-				pSrcFile = gtk_source_file_new();
-				gtk_source_file_set_location(pSrcFile, pFile);
+    			if (pcFilename != NULL) {
+				    g_print("Export file : '%s'.\n", pcFilename);
 				
-				pSrcFileSaver = gtk_source_file_saver_new(GTK_SOURCE_BUFFER(pTextBuffer), pSrcFile);
-				
-				gtk_source_file_saver_save_async(pSrcFileSaver, G_PRIORITY_DEFAULT, NULL, NULL, NULL, NULL, quickpad_clbk_btn_export_cb_async, pcFilename);
+				    pTextBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(pTabInfo->pTextView));
+				    pFile = g_file_new_for_path(pcFilename);
+				    pSrcFile = gtk_source_file_new();
+				    gtk_source_file_set_location(pSrcFile, pFile);
+				    
+				    pSrcFileSaver = gtk_source_file_saver_new(GTK_SOURCE_BUFFER(pTextBuffer), pSrcFile);
+				    
+				    gtk_source_file_saver_save_async(pSrcFileSaver, G_PRIORITY_DEFAULT, NULL, NULL, NULL, NULL, quickpad_clbk_btn_export_cb_async, pcFilename);
+                }
 			}
 		}
 	}
