@@ -17,7 +17,7 @@ struct _QuickpadAppWindow {
 	GtkNotebook * ntbContent;
 	
 	guint iTabCounter;
-	GHashTable * pHTabsIds;
+        gboolean bInitTab;
 };
 
 typedef struct _QuickpadTab {
@@ -28,7 +28,9 @@ typedef struct _QuickpadTab {
 	GtkWidget * pLabel;
 	GtkWidget * pTxtLabel;
 	GtkWidget * pTextView;
+	GSettings * pTabSettings;
 	gchar * pcTabId;
+	gint iTabPos;
 } QuickpadTab;
 
 G_DEFINE_TYPE(QuickpadAppWindow, quickpad_app_window, GTK_TYPE_APPLICATION_WINDOW);
@@ -68,8 +70,7 @@ static void quickpad_app_window_get_property (GObject * object, guint property_i
 
 static GParamSpec * arObjectProperties[N_PROPERTIES] = { NULL, };
 
-void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, gchar * pcTitle, gchar * pcContent);
-void quickpad_app_window_update_tab_list (QuickpadAppWindow * pWindow);
+QuickpadTab * quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, gchar * pcTitle, gchar * pcContent);
 gchar * quickpad_app_window_select_name(QuickpadAppWindow * pWindow, GtkFileChooserAction action, gchar * pcFilename);
 
 void quickpad_clbk_btn_edit(GtkMenuItem *menuitem, gpointer user_data);
@@ -84,7 +85,7 @@ static void quickpad_app_window_init (QuickpadAppWindow *pWindow) {
 	
 	gtk_widget_init_template(GTK_WIDGET(pWindow));
 	
-	pWindow->pHTabsIds = g_hash_table_new(g_str_hash, g_str_equal);
+	pWindow->bInitTab = FALSE;
 }
 
 static void quickpad_app_window_class_init (QuickpadAppWindowClass *pClass) {
@@ -119,7 +120,12 @@ gboolean quickpad_clbk_delete_event (GtkWidget * widget, GdkEvent * event, gpoin
 
 QuickpadAppWindow * quickpad_app_window_new (QuickpadApp * pApp) {
 	QuickpadAppWindow * pWindow = g_object_new (QUICKPAD_TYPE_APP_WINDOW, "application", pApp, NULL);
+	GtkWidget * pPageChild = NULL;
+	QuickpadTab * pTabInfo = NULL;
+	DConfClient * pDcnfClient;
 	GSettings * pSettings = quickpad_app_get_settings(pApp);
+	gchar ** pArElements, * pcTabId;
+	gint iNbElements, iIdx;
 	
 	g_settings_bind(pSettings, "tab-counter", pWindow, "tab-counter", G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(pSettings, "line-numbers", pWindow->mnuLineNumbers, "active", G_SETTINGS_BIND_DEFAULT);
@@ -127,19 +133,29 @@ QuickpadAppWindow * quickpad_app_window_new (QuickpadApp * pApp) {
 	
 	g_signal_connect(pWindow, "delete-event", G_CALLBACK(quickpad_clbk_delete_event), pWindow);
 	
-	DConfClient * pDcnfClient;
-	gchar ** pArElements, * pcTabId;
-	gint iNbElements, iIdx;
-	
+	pWindow->bInitTab = TRUE;
+        
 	pDcnfClient = dconf_client_new();
 	pArElements = dconf_client_list(pDcnfClient, "/net/thepozer/quickpad/tabs/", &iNbElements);
 	for (iIdx = 0; iIdx < iNbElements; iIdx ++) {
 		pcTabId = g_strndup(pArElements[iIdx], strlen(pArElements[iIdx]) - 1);
-		g_print ("name tabs : %s\n", pcTabId);
-		g_hash_table_add(pWindow->pHTabsIds, pcTabId);
-		quickpad_app_window_add_tab(pWindow, pcTabId, NULL, NULL);
+		pTabInfo = quickpad_app_window_add_tab(pWindow, pcTabId, NULL, NULL);
+		pTabInfo->iTabPos = g_settings_get_int(pTabInfo->pTabSettings, "order");
 	}
-
+        
+	iNbElements = gtk_notebook_get_n_pages(pWindow->ntbContent);
+	for (iIdx = 0; iIdx < iNbElements; iIdx ++) {
+		pPageChild = gtk_notebook_get_nth_page(pWindow->ntbContent, iIdx);
+		if (pPageChild != NULL) {
+			pTabInfo = g_object_get_data(G_OBJECT(pPageChild), "tab_info");
+			if (pTabInfo != NULL) {
+				gtk_notebook_reorder_child(pWindow->ntbContent, pPageChild, pTabInfo->iTabPos);
+			}
+		}
+	}
+	
+	pWindow->bInitTab = FALSE;
+        
 	return pWindow;
 }
 
@@ -232,18 +248,18 @@ void quickpad_clbk_btn_export (GtkMenuItem *menuitem, gpointer user_data) {
 			if (pTabInfo != NULL) {
 				pcFilename = quickpad_app_window_select_name(pWindow, GTK_FILE_CHOOSER_ACTION_SAVE, NULL);
 				
-    			if (pcFilename != NULL) {
-				    g_print("Export file : '%s'.\n", pcFilename);
-				
-				    pTextBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(pTabInfo->pTextView));
-				    pFile = g_file_new_for_path(pcFilename);
-				    pSrcFile = gtk_source_file_new();
-				    gtk_source_file_set_location(pSrcFile, pFile);
-				    
-				    pSrcFileSaver = gtk_source_file_saver_new(GTK_SOURCE_BUFFER(pTextBuffer), pSrcFile);
-				    
-				    gtk_source_file_saver_save_async(pSrcFileSaver, G_PRIORITY_DEFAULT, NULL, NULL, NULL, NULL, quickpad_clbk_btn_export_cb_async, pcFilename);
-                }
+    				if (pcFilename != NULL) {
+					g_print("Export file : '%s'.\n", pcFilename);
+					
+					pTextBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(pTabInfo->pTextView));
+					pFile = g_file_new_for_path(pcFilename);
+					pSrcFile = gtk_source_file_new();
+					gtk_source_file_set_location(pSrcFile, pFile);
+					    
+					pSrcFileSaver = gtk_source_file_saver_new(GTK_SOURCE_BUFFER(pTextBuffer), pSrcFile);
+					    
+					gtk_source_file_saver_save_async(pSrcFileSaver, G_PRIORITY_DEFAULT, NULL, NULL, NULL, NULL, quickpad_clbk_btn_export_cb_async, pcFilename);
+				}
 			}
 		}
 	}
@@ -322,18 +338,13 @@ void quickpad_clbk_btn_close (GtkMenuItem *menuitem, gpointer user_data) {
 	g_print("quickpad_clbk_btn_close - pcTabId : '%s' - iPos : %d\n", pTabInfo->pcTabId, iPos);
 	if (iPos >= 0) {
 		gtk_notebook_remove_page(pTabInfo->pWindow->ntbContent, iPos);
-		if (g_hash_table_remove(pTabInfo->pWindow->pHTabsIds, pTabInfo->pcTabId)) {
-
-			pDcnfClient = dconf_client_new();
-
-			pcPath = g_strdup_printf("/net/thepozer/quickpad/tabs/%s/", pTabInfo->pcTabId);
-			dconf_client_write_fast(pDcnfClient, pcPath, NULL, NULL);
-			g_free(pcPath);
-			
-			g_free(pTabInfo);
-		} else {
-			g_printerr("quickpad_clbk_btn_close - pcTabId : '%s' - Not found in HashTable ... \n", pTabInfo->pcTabId);
-		}
+		pDcnfClient = dconf_client_new();
+		
+		pcPath = g_strdup_printf("/net/thepozer/quickpad/tabs/%s/", pTabInfo->pcTabId);
+		dconf_client_write_fast(pDcnfClient, pcPath, NULL, NULL);
+                
+		g_free(pcPath);
+		g_free(pTabInfo);
 	}
 }
 
@@ -351,7 +362,28 @@ gboolean quickpad_clbk_entry_evt_keyrelease (GtkWidget *widget, GdkEventKey *eve
 	return FALSE;
 }
 
-void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, gchar * pcTitle, gchar * pcContent) {
+void quickpad_clbk_reorder_page (GtkNotebook *ntbContent, GtkWidget *child, guint page_num, gpointer user_data) {
+	QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+	GtkWidget *pPageChild = NULL;
+	QuickpadTab * pTabInfo = NULL;
+	int iIdx, iSize;
+	
+	if (!pWindow->bInitTab) {
+		iSize = gtk_notebook_get_n_pages(ntbContent);
+		for (iIdx = 0; iIdx < iSize; iIdx ++) {
+			pPageChild = gtk_notebook_get_nth_page(pWindow->ntbContent, iIdx);
+			if (pPageChild != NULL) {
+				pTabInfo = g_object_get_data(G_OBJECT(pPageChild), "tab_info");
+				if (pTabInfo != NULL) {
+					pTabInfo->iTabPos = iIdx;
+					g_settings_set_int(pTabInfo->pTabSettings, "order", pTabInfo->iTabPos);
+				}
+			}
+		}
+	}
+}
+
+QuickpadTab * quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, gchar * pcTitle, gchar * pcContent) {
 	GtkWidget * pScrolled, * pHBox, * pBtnEdit, * pBtnClose, * pBtnSave, * pBtnCancel;
 	GtkTextBuffer * pTextBuffer;
 	GSettings * pSettings, * pTabSettings;
@@ -362,6 +394,7 @@ void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, g
 	
 	pTabInfo = g_new0(QuickpadTab, 1);
 	pTabInfo->pWindow = pWindow;
+	pTabInfo->iTabPos = -1;
 
 	pScrolled = gtk_scrolled_window_new(NULL, NULL);
 	gtk_widget_show(pScrolled);
@@ -414,8 +447,8 @@ void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, g
 	gtk_widget_show(pBtnClose);
 	gtk_box_pack_start(GTK_BOX(pHBox), pBtnClose, FALSE, FALSE, 0);
 	
-	iPos = gtk_notebook_append_page(pWindow->ntbContent, pScrolled, pHBox);
-	pTabInfo->pPageChild = gtk_notebook_get_nth_page(pWindow->ntbContent, iPos);
+	pTabInfo->iTabPos = gtk_notebook_append_page(pWindow->ntbContent, pScrolled, pHBox);
+	pTabInfo->pPageChild = gtk_notebook_get_nth_page(pWindow->ntbContent, pTabInfo->iTabPos);
 	gtk_notebook_set_tab_reorderable(pWindow->ntbContent, pTabInfo->pPageChild, TRUE);
 	
 	if (bNewId) {
@@ -435,10 +468,11 @@ void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, g
 	g_object_set_data(G_OBJECT(pTabInfo->pPageChild), "tab_info", pTabInfo);
 	
 	pcPath = g_strdup_printf("/net/thepozer/quickpad/tabs/%s/", pcTabId);
-	pTabSettings = g_settings_new_with_path("net.thepozer.quickpad.tab", pcPath);
+	pTabInfo->pTabSettings = g_settings_new_with_path("net.thepozer.quickpad.tab", pcPath);
 
-	g_settings_bind(pTabSettings, "title",   pTabInfo->pLabel, "label", G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind(pTabSettings, "content", pTextBuffer,      "text",  G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind(pTabInfo->pTabSettings, "title",   pTabInfo->pLabel,     "label",     G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind(pTabInfo->pTabSettings, "content", pTextBuffer,          "text",      G_SETTINGS_BIND_DEFAULT);
+	//g_settings_bind(pTabInfo->pTabSettings, "order",   pTabInfo->pPageChild, "position",  G_SETTINGS_BIND_DEFAULT);
 
 	pSettings = quickpad_app_get_settings(QUICKPAD_APP(gtk_window_get_application(GTK_WINDOW(pWindow))));
 	
@@ -446,14 +480,14 @@ void quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, g
 	g_settings_bind (pSettings, "highlight-current-line", pTabInfo->pTextView, "highlight-current-line", G_SETTINGS_BIND_DEFAULT);
 
 	if (bNewId) {
-		g_hash_table_add(pWindow->pHTabsIds, pcTabId);
-		
-		g_settings_set_string(pTabSettings, "id",      pcTabId);
-		g_settings_set_string(pTabSettings, "title",   pcTitle);
-		g_settings_set_string(pTabSettings, "content", pcContent);
+		g_settings_set_string(pTabInfo->pTabSettings, "id",      pcTabId);
+		g_settings_set_string(pTabInfo->pTabSettings, "title",   pcTitle);
+		g_settings_set_string(pTabInfo->pTabSettings, "content", pcContent);
 	}
 	
-	gtk_notebook_set_current_page(pWindow->ntbContent, iPos);
+	gtk_notebook_set_current_page(pWindow->ntbContent, pTabInfo->iTabPos);
 	
 	g_free(pcPath);
+	
+	return pTabInfo;
 }

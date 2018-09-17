@@ -23,6 +23,11 @@
       <summary>Tab id</summary>
       <description>Tab id</description>
     </key>
+    <key name="order" type="i">
+      <default>0</default>
+      <summary>Order id</summary>
+      <description>Order id</description>
+    </key>
     <key name="title" type="s">
       <default>'New tab'</default>
       <summary>Tab title</summary>
