@@ -13,9 +13,17 @@ struct _QuickpadAppWindow {
 
     GtkCheckMenuItem * mnuLineNumbers;
     GtkCheckMenuItem * mnuHighlightCurrentLine;
-
+    GtkCheckMenuItem * mnuNightMode;
+    GtkRadioMenuItem * mnuTabSize2;
+    GtkRadioMenuItem * mnuTabSize3;
+    GtkRadioMenuItem * mnuTabSize4;
+    GtkRadioMenuItem * mnuTabSize8;
+    GtkCheckMenuItem * mnuTabSpace;
+    
     GtkNotebook * ntbContent;
 
+    gint iTabSize;
+    
     guint iTabCounter;
     gboolean bInitTab;
 };
@@ -106,6 +114,12 @@ static void quickpad_app_window_class_init (QuickpadAppWindowClass *pClass) {
 
     gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, mnuLineNumbers);
     gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, mnuHighlightCurrentLine);
+    gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, mnuNightMode);
+    gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, mnuTabSize2);
+    gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, mnuTabSize3);
+    gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, mnuTabSize4);
+    gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, mnuTabSize8);
+    gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, mnuTabSpace);
 
     gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(pClass), QuickpadAppWindow, ntbContent);
 }
@@ -125,12 +139,25 @@ QuickpadAppWindow * quickpad_app_window_new (QuickpadApp * pApp) {
     DConfClient * pDcnfClient;
     GSettings * pSettings = quickpad_app_get_settings(pApp);
     gchar ** pArElements, * pcTabId;
-    gint iNbElements, iIdx;
+    gint iNbElements, iIdx, iTabSize;
 
     g_settings_bind(pSettings, "tab-counter", pWindow, "tab-counter", G_SETTINGS_BIND_DEFAULT);
     g_settings_bind(pSettings, "line-numbers", pWindow->mnuLineNumbers, "active", G_SETTINGS_BIND_DEFAULT);
     g_settings_bind(pSettings, "highlight-current-line", pWindow->mnuHighlightCurrentLine, "active", G_SETTINGS_BIND_DEFAULT);
-
+    g_settings_bind(pSettings, "tab-space", pWindow->mnuTabSpace, "active", G_SETTINGS_BIND_DEFAULT);
+    
+    pWindow->iTabSize = g_settings_get_int(pSettings, "tab-size");
+    if (pWindow->iTabSize == 8) {
+         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(pWindow->mnuTabSize8), TRUE);
+    } else if (pWindow->iTabSize == 4) {
+         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(pWindow->mnuTabSize4), TRUE);
+    } else if (pWindow->iTabSize == 3) {
+         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(pWindow->mnuTabSize3), TRUE);
+    } else {
+        pWindow->iTabSize = 1;
+         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(pWindow->mnuTabSize2), TRUE);
+    } 
+    
     g_signal_connect(pWindow, "delete-event", G_CALLBACK(quickpad_clbk_delete_event), pWindow);
 
     pWindow->bInitTab = TRUE;
@@ -157,6 +184,62 @@ QuickpadAppWindow * quickpad_app_window_new (QuickpadApp * pApp) {
     pWindow->bInitTab = FALSE;
 
     return pWindow;
+}
+
+void quickpad_clbk_mnu_tabsize2 (GtkMenuItem *menuitem, gpointer user_data) {
+    QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+    QuickpadApp * pApp = NULL;
+    GSettings * pSettings = NULL;
+    
+    g_object_get(pWindow, "application", &pApp, NULL);
+    pSettings = quickpad_app_get_settings(pApp);
+    
+    if (pWindow->iTabSize != 2) {
+        pWindow->iTabSize = 2;
+        g_settings_set_int(pSettings, "tab-size", 2);
+    }
+}
+
+void quickpad_clbk_mnu_tabsize3 (GtkMenuItem *menuitem, gpointer user_data) {
+    QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+    QuickpadApp * pApp = NULL;
+    GSettings * pSettings = NULL;
+    
+    g_object_get(pWindow, "application", &pApp, NULL);
+    pSettings = quickpad_app_get_settings(pApp);
+
+    if (pWindow->iTabSize != 3) {
+        pWindow->iTabSize = 3;
+        g_settings_set_int(pSettings, "tab-size", 3);
+    }
+}
+
+void quickpad_clbk_mnu_tabsize4 (GtkMenuItem *menuitem, gpointer user_data) {
+    QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+    QuickpadApp * pApp = NULL;
+    GSettings * pSettings = NULL;
+    
+    g_object_get(pWindow, "application", &pApp, NULL);
+    pSettings = quickpad_app_get_settings(pApp);
+
+    if (pWindow->iTabSize != 4) {
+        pWindow->iTabSize = 4;
+        g_settings_set_int(pSettings, "tab-size", 4);
+    }
+}
+
+void quickpad_clbk_mnu_tabsize8 (GtkMenuItem *menuitem, gpointer user_data) {
+    QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
+    QuickpadApp * pApp = NULL;
+    GSettings * pSettings = NULL;
+    
+    g_object_get(pWindow, "application", &pApp, NULL);
+    pSettings = quickpad_app_get_settings(pApp);
+
+    if (pWindow->iTabSize != 8) {
+        pWindow->iTabSize = 8;
+        g_settings_set_int(pSettings, "tab-size", 8);
+    }
 }
 
 void quickpad_clbk_mnu_about (GtkMenuItem *menuitem, gpointer user_data) {
@@ -478,6 +561,9 @@ QuickpadTab * quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * p
 
     g_settings_bind (pSettings, "line-numbers", pTabInfo->pTextView, "show-line-numbers", G_SETTINGS_BIND_DEFAULT);
     g_settings_bind (pSettings, "highlight-current-line", pTabInfo->pTextView, "highlight-current-line", G_SETTINGS_BIND_DEFAULT);
+    g_settings_bind (pSettings, "tab-space", pTabInfo->pTextView, "insert-spaces-instead-of-tabs", G_SETTINGS_BIND_DEFAULT);
+    g_settings_bind (pSettings, "tab-size",  pTabInfo->pTextView, "indent-width", G_SETTINGS_BIND_DEFAULT);
+    g_settings_bind (pSettings, "tab-size",  pTabInfo->pTextView, "tab-width", G_SETTINGS_BIND_DEFAULT);
 
     if (bNewId) {
         g_settings_set_string(pTabInfo->pTabSettings, "id",      pcTabId);

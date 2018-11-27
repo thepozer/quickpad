@@ -35,6 +35,85 @@
       </object>
     </child>
     <child>
+      <object class="GtkCheckMenuItem" id="mnuNightMode">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Night/Dark mode</property>
+        <property name="use_underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="mnuTabSize">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Tabulation size</property>
+        <property name="use_underline">True</property>
+        <child type="submenu">
+          <object class="GtkMenu">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkRadioMenuItem" id="mnuTabSize2">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Size : 2</property>
+                <property name="use_underline">True</property>
+                <property name="draw_as_radio">True</property>
+                <signal name="activate" handler="quickpad_clbk_mnu_tabsize2" object="QuickpadAppWindow" swapped="no"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkRadioMenuItem" id="mnuTabSize3">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Size : 3</property>
+                <property name="use_underline">True</property>
+                <property name="draw_as_radio">True</property>
+                <property name="group">mnuTabSize2</property>
+                <signal name="activate" handler="quickpad_clbk_mnu_tabsize3" object="QuickpadAppWindow" swapped="no"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkRadioMenuItem" id="mnuTabSize4">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Size : 4</property>
+                <property name="use_underline">True</property>
+                <property name="draw_as_radio">True</property>
+                <property name="group">mnuTabSize2</property>
+                <signal name="activate" handler="quickpad_clbk_mnu_tabsize4" object="QuickpadAppWindow" swapped="no"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkRadioMenuItem" id="mnuTabSize8">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Size : 8</property>
+                <property name="use_underline">True</property>
+                <property name="draw_as_radio">True</property>
+                <property name="group">mnuTabSize2</property>
+                <signal name="activate" handler="quickpad_clbk_mnu_tabsize8" object="QuickpadAppWindow" swapped="no"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparatorMenuItem">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkCheckMenuItem" id="mnuTabSpace">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Tab using spaces</property>
+                <property name="use_underline">True</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
       <object class="GtkSeparatorMenuItem">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
@@ -136,6 +215,7 @@
           </object>
           <packing>
             <property name="pack_type">end</property>
+            <property name="position">3</property>
           </packing>
         </child>
       </object>
