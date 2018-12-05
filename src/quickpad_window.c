@@ -420,14 +420,26 @@ void quickpad_clbk_btn_close (GtkMenuItem *menuitem, gpointer user_data) {
     iPos = gtk_notebook_page_num(pTabInfo->pWindow->ntbContent, pTabInfo->pPageChild);
     g_print("quickpad_clbk_btn_close - pcTabId : '%s' - iPos : %d\n", pTabInfo->pcTabId, iPos);
     if (iPos >= 0) {
-        gtk_notebook_remove_page(pTabInfo->pWindow->ntbContent, iPos);
-        pDcnfClient = dconf_client_new();
+        GtkWidget * pDlg = NULL;
+        gint iStatus = 0;
+        
+        pDlg = gtk_message_dialog_new (GTK_WINDOW(pTabInfo->pWindow),
+                GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
+                "Are you sure to close this tab : %s",
+                gtk_label_get_label(GTK_LABEL(pTabInfo->pLabel)));
+        iStatus = gtk_dialog_run (GTK_DIALOG (pDlg));
+        gtk_widget_destroy (pDlg);
+        
+        if (iStatus == GTK_RESPONSE_YES) {
+            gtk_notebook_remove_page(pTabInfo->pWindow->ntbContent, iPos);
+            pDcnfClient = dconf_client_new();
 
-        pcPath = g_strdup_printf("/net/thepozer/quickpad/tabs/%s/", pTabInfo->pcTabId);
-        dconf_client_write_fast(pDcnfClient, pcPath, NULL, NULL);
+            pcPath = g_strdup_printf("/net/thepozer/quickpad/tabs/%s/", pTabInfo->pcTabId);
+            dconf_client_write_fast(pDcnfClient, pcPath, NULL, NULL);
 
-        g_free(pcPath);
-        g_free(pTabInfo);
+            g_free(pcPath);
+            g_free(pTabInfo);
+        }
     }
 }
 
