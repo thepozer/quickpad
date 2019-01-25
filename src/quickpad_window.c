@@ -33,7 +33,7 @@ typedef struct _QuickpadTab {
     GtkWidget * pPageChild;
     GtkWidget * pHBoxShow;
     GtkWidget * pHBoxEdit;
-    GtkWidget * pLabel;
+    GtkWidget * pBtnLabel;
     GtkWidget * pTxtLabel;
     GtkWidget * pTextView;
     GSettings * pTabSettings;
@@ -81,10 +81,10 @@ static GParamSpec * arObjectProperties[N_PROPERTIES] = { NULL, };
 QuickpadTab * quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * pcTabId, gchar * pcTitle, gchar * pcContent);
 gchar * quickpad_app_window_select_name(QuickpadAppWindow * pWindow, GtkFileChooserAction action, gchar * pcFilename);
 
-void quickpad_clbk_btn_edit(GtkMenuItem *menuitem, gpointer user_data);
-void quickpad_clbk_btn_save(GtkMenuItem *menuitem, gpointer user_data);
-void quickpad_clbk_btn_cancel(GtkMenuItem *menuitem, gpointer user_data);
-void quickpad_clbk_btn_close(GtkMenuItem *menuitem, gpointer user_data);
+void quickpad_clbk_btn_save(GtkButton * pButton, gpointer user_data);
+void quickpad_clbk_btn_cancel(GtkButton * pButton, gpointer user_data);
+void quickpad_clbk_btn_close(GtkButton * pButton, gpointer user_data);
+gboolean quickpad_clbk_btn_label_evt_buttonpress(GtkWidget * pWidget, GdkEventKey * pEvent, gpointer user_data);
 gboolean quickpad_clbk_entry_evt_keyrelease (GtkWidget *widget, GdkEventKey *event, gpointer user_data);
 
 static void quickpad_app_window_init (QuickpadAppWindow *pWindow) {
@@ -388,30 +388,36 @@ void quickpad_clbk_btn_config (GtkMenuItem *menuitem, gpointer user_data) {
 
 }
 
-void quickpad_clbk_btn_edit(GtkMenuItem *menuitem, gpointer user_data) {
+gboolean quickpad_clbk_btn_label_evt_buttonpress(GtkWidget * pWidget, GdkEventKey * pEvent, gpointer user_data) {
     QuickpadTab * pTabInfo = user_data;
 
-    gtk_entry_set_text(GTK_ENTRY(pTabInfo->pTxtLabel), gtk_label_get_label(GTK_LABEL(pTabInfo->pLabel)));
-    gtk_widget_hide(pTabInfo->pHBoxShow);
-    gtk_widget_show(pTabInfo->pHBoxEdit);
-    gtk_widget_grab_focus(pTabInfo->pTxtLabel);
+    if (GTK_IS_BUTTON(pWidget) && pEvent->type == GDK_2BUTTON_PRESS) {
+        gtk_entry_set_text(GTK_ENTRY(pTabInfo->pTxtLabel), gtk_button_get_label(GTK_BUTTON(pTabInfo->pBtnLabel)));
+        gtk_widget_hide(pTabInfo->pHBoxShow);
+        gtk_widget_show(pTabInfo->pHBoxEdit);
+        gtk_widget_grab_focus(pTabInfo->pTxtLabel);
+    } else {
+        gtk_widget_event(GTK_WIDGET(pTabInfo->pWindow->ntbContent), (GdkEvent *)pEvent);
+    }
+
+    return FALSE;
 }
 
-void quickpad_clbk_btn_save (GtkMenuItem *menuitem, gpointer user_data) {
+void quickpad_clbk_btn_save (GtkButton * pButton, gpointer user_data) {
     QuickpadTab * pTabInfo = user_data;
 
-    gtk_label_set_label(GTK_LABEL(pTabInfo->pLabel), gtk_entry_get_text(GTK_ENTRY(pTabInfo->pTxtLabel)));
-    quickpad_clbk_btn_cancel(menuitem, user_data);
+    gtk_button_set_label(GTK_BUTTON(pTabInfo->pBtnLabel), gtk_entry_get_text(GTK_ENTRY(pTabInfo->pTxtLabel)));
+    quickpad_clbk_btn_cancel(pButton, user_data);
 }
 
-void quickpad_clbk_btn_cancel (GtkMenuItem *menuitem, gpointer user_data) {
+void quickpad_clbk_btn_cancel (GtkButton * pButton, gpointer user_data) {
     QuickpadTab * pTabInfo = user_data;
 
     gtk_widget_hide(pTabInfo->pHBoxEdit);
     gtk_widget_show(pTabInfo->pHBoxShow);
 }
 
-void quickpad_clbk_btn_close (GtkMenuItem *menuitem, gpointer user_data) {
+void quickpad_clbk_btn_close (GtkButton * pButton, gpointer user_data) {
     QuickpadTab * pTabInfo = user_data;
     DConfClient * pDcnfClient;
     gchar * pcPath;
@@ -426,7 +432,7 @@ void quickpad_clbk_btn_close (GtkMenuItem *menuitem, gpointer user_data) {
         pDlg = gtk_message_dialog_new (GTK_WINDOW(pTabInfo->pWindow),
                 GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
                 "Are you sure to close this tab : %s",
-                gtk_label_get_label(GTK_LABEL(pTabInfo->pLabel)));
+                gtk_button_get_label(GTK_BUTTON(pTabInfo->pBtnLabel)));
         iStatus = gtk_dialog_run (GTK_DIALOG (pDlg));
         gtk_widget_destroy (pDlg);
         
@@ -510,14 +516,16 @@ QuickpadTab * quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * p
     gtk_widget_show(pTabInfo->pHBoxShow);
     gtk_box_pack_start(GTK_BOX(pHBox), pTabInfo->pHBoxShow, TRUE, TRUE, 0);
 
-    pBtnEdit = gtk_button_new_from_icon_name("gtk-edit", GTK_ICON_SIZE_SMALL_TOOLBAR);
-    gtk_button_set_relief(GTK_BUTTON(pBtnEdit), GTK_RELIEF_NONE);
-    gtk_widget_show(pBtnEdit);
-    gtk_box_pack_start(GTK_BOX(pTabInfo->pHBoxShow), pBtnEdit, FALSE, FALSE, 0);
+    pTabInfo->pBtnLabel = gtk_button_new_from_icon_name("gtk-edit", GTK_ICON_SIZE_SMALL_TOOLBAR);
+    gtk_button_set_relief(GTK_BUTTON(pTabInfo->pBtnLabel), GTK_RELIEF_NONE);
+    gtk_button_set_label(GTK_BUTTON(pTabInfo->pBtnLabel), "");
+    gtk_widget_show(pTabInfo->pBtnLabel);
+    gtk_box_pack_start(GTK_BOX(pTabInfo->pHBoxShow), pTabInfo->pBtnLabel, FALSE, FALSE, 0);
 
-    pTabInfo->pLabel = gtk_label_new("");
-    gtk_widget_show(pTabInfo->pLabel);
-    gtk_box_pack_start(GTK_BOX(pTabInfo->pHBoxShow), pTabInfo->pLabel, TRUE, TRUE, 0);
+    pBtnClose = gtk_button_new_from_icon_name("window-close", GTK_ICON_SIZE_SMALL_TOOLBAR);
+    gtk_button_set_relief(GTK_BUTTON(pBtnClose), GTK_RELIEF_NONE);
+    gtk_widget_show(pBtnClose);
+    gtk_box_pack_start(GTK_BOX(pTabInfo->pHBoxShow), pBtnClose, FALSE, FALSE, 0);
 
     pTabInfo->pHBoxEdit = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_widget_hide(pTabInfo->pHBoxEdit);
@@ -537,11 +545,6 @@ QuickpadTab * quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * p
     gtk_widget_show(pBtnCancel);
     gtk_box_pack_start(GTK_BOX(pTabInfo->pHBoxEdit), pBtnCancel, FALSE, FALSE, 0);
 
-    pBtnClose = gtk_button_new_from_icon_name("window-close", GTK_ICON_SIZE_SMALL_TOOLBAR);
-    gtk_button_set_relief(GTK_BUTTON(pBtnClose), GTK_RELIEF_NONE);
-    gtk_widget_show(pBtnClose);
-    gtk_box_pack_start(GTK_BOX(pHBox), pBtnClose, FALSE, FALSE, 0);
-
     pTabInfo->iTabPos = gtk_notebook_append_page(pWindow->ntbContent, pScrolled, pHBox);
     pTabInfo->pPageChild = gtk_notebook_get_nth_page(pWindow->ntbContent, pTabInfo->iTabPos);
     gtk_notebook_set_tab_reorderable(pWindow->ntbContent, pTabInfo->pPageChild, TRUE);
@@ -555,17 +558,17 @@ QuickpadTab * quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * p
 
     pTabInfo->pcTabId = pcTabId;
 
-    g_signal_connect(pBtnEdit,   "clicked", G_CALLBACK(quickpad_clbk_btn_edit),   pTabInfo);
     g_signal_connect(pBtnSave,   "clicked", G_CALLBACK(quickpad_clbk_btn_save),   pTabInfo);
     g_signal_connect(pBtnCancel, "clicked", G_CALLBACK(quickpad_clbk_btn_cancel), pTabInfo);
     g_signal_connect(pBtnClose,  "clicked", G_CALLBACK(quickpad_clbk_btn_close),  pTabInfo);
+    g_signal_connect(pTabInfo->pBtnLabel, "button-press-event", G_CALLBACK(quickpad_clbk_btn_label_evt_buttonpress), pTabInfo);
     g_signal_connect(pTabInfo->pTxtLabel, "key-release-event",  G_CALLBACK(quickpad_clbk_entry_evt_keyrelease), pTabInfo);
     g_object_set_data(G_OBJECT(pTabInfo->pPageChild), "tab_info", pTabInfo);
 
     pcPath = g_strdup_printf("/net/thepozer/quickpad/tabs/%s/", pcTabId);
     pTabInfo->pTabSettings = g_settings_new_with_path("net.thepozer.quickpad.tab", pcPath);
 
-    g_settings_bind(pTabInfo->pTabSettings, "title",   pTabInfo->pLabel,     "label",     G_SETTINGS_BIND_DEFAULT);
+    g_settings_bind(pTabInfo->pTabSettings, "title",   pTabInfo->pBtnLabel,  "label",     G_SETTINGS_BIND_DEFAULT);
     g_settings_bind(pTabInfo->pTabSettings, "content", pTextBuffer,          "text",      G_SETTINGS_BIND_DEFAULT);
     //g_settings_bind(pTabInfo->pTabSettings, "order",   pTabInfo->pPageChild, "position",  G_SETTINGS_BIND_DEFAULT);
 
