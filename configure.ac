@@ -1,4 +1,4 @@
-AC_INIT([quickpad], [0.7.1], [Didier prolhac <dev@thepozer.net>])
+AC_INIT([quickpad], [0.8.2], [Didier prolhac <dev@thepozer.net>])
 AC_CONFIG_SRCDIR([src/quickpad_main.c])
 AM_INIT_AUTOMAKE([-Wall foreign])
 AM_SILENT_RULES([yes])

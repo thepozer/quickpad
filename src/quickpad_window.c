@@ -84,8 +84,9 @@ gchar * quickpad_app_window_select_name(QuickpadAppWindow * pWindow, GtkFileChoo
 void quickpad_clbk_btn_save(GtkButton * pButton, gpointer user_data);
 void quickpad_clbk_btn_cancel(GtkButton * pButton, gpointer user_data);
 void quickpad_clbk_btn_close(GtkButton * pButton, gpointer user_data);
-gboolean quickpad_clbk_notebook_evt_buttonpress(GtkWidget * pWidget, GdkEventKey * pEvent, gpointer user_data) ;
-gboolean quickpad_clbk_btnlabel_evt_buttonpress(GtkWidget * pWidget, GdkEventKey * pEvent, gpointer user_data);
+gboolean quickpad_clbk_notebook_evt_buttonpress(GtkWidget * pWidget, GdkEventButton * pEvent, gpointer user_data) ;
+gboolean quickpad_clbk_editor_evt_buttonpress(GtkWidget * pWidget, GdkEventButton * pEvent, gpointer user_data) ;
+gboolean quickpad_clbk_btnlabel_evt_buttonpress(GtkWidget * pWidget, GdkEventButton * pEvent, gpointer user_data);
 gboolean quickpad_clbk_entry_evt_keyrelease (GtkWidget *widget, GdkEventKey *event, gpointer user_data);
 
 static void quickpad_app_window_init (QuickpadAppWindow *pWindow) {
@@ -159,7 +160,7 @@ QuickpadAppWindow * quickpad_app_window_new (QuickpadApp * pApp) {
          gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(pWindow->mnuTabSize2), TRUE);
     } 
     
-    g_signal_connect(pWindow, "button-press-event", G_CALLBACK(quickpad_clbk_notebook_evt_buttonpress), pWindow);
+    g_signal_connect(pWindow->ntbContent, "button-press-event", G_CALLBACK(quickpad_clbk_notebook_evt_buttonpress), pWindow);
     g_signal_connect(pWindow, "delete-event", G_CALLBACK(quickpad_clbk_delete_event), pWindow);
 
     pWindow->bInitTab = TRUE;
@@ -390,10 +391,10 @@ void quickpad_clbk_btn_config (GtkMenuItem *menuitem, gpointer user_data) {
 
 }
 
-gboolean quickpad_clbk_notebook_evt_buttonpress(GtkWidget * pWidget, GdkEventKey * pEvent, gpointer user_data) {
+gboolean quickpad_clbk_notebook_evt_buttonpress(GtkWidget * pWidget, GdkEventButton * pEvent, gpointer user_data) {
     QuickpadAppWindow * pWindow = QUICKPAD_APP_WINDOW(user_data);
 	
-    if (pEvent->type == GDK_2BUTTON_PRESS) {
+    if (GTK_IS_NOTEBOOK(pWidget) && pEvent->type == GDK_DOUBLE_BUTTON_PRESS) {
 		quickpad_app_window_add_tab(pWindow, NULL, _("New pad"), "");
 		return TRUE;
     }
@@ -401,10 +402,20 @@ gboolean quickpad_clbk_notebook_evt_buttonpress(GtkWidget * pWidget, GdkEventKey
     return FALSE;
 }
 
-gboolean quickpad_clbk_btnlabel_evt_buttonpress(GtkWidget * pWidget, GdkEventKey * pEvent, gpointer user_data) {
+gboolean quickpad_clbk_editor_evt_buttonpress(GtkWidget * pWidget, GdkEventButton * pEvent, gpointer user_data) {
     QuickpadTab * pTabInfo = user_data;
 
-    if (GTK_IS_BUTTON(pWidget) && pEvent->type == GDK_2BUTTON_PRESS) {
+    if (pEvent->type == GDK_DOUBLE_BUTTON_PRESS) {
+		return TRUE;
+    }
+
+    return FALSE;
+}
+
+gboolean quickpad_clbk_btnlabel_evt_buttonpress(GtkWidget * pWidget, GdkEventButton * pEvent, gpointer user_data) {
+    QuickpadTab * pTabInfo = user_data;
+
+    if (GTK_IS_BUTTON(pWidget) && pEvent->type == GDK_DOUBLE_BUTTON_PRESS) {
         gtk_entry_set_text(GTK_ENTRY(pTabInfo->pTxtLabel), gtk_button_get_label(GTK_BUTTON(pTabInfo->pBtnLabel)));
         gtk_widget_hide(pTabInfo->pHBoxShow);
         gtk_widget_show(pTabInfo->pHBoxEdit);
@@ -575,7 +586,7 @@ QuickpadTab * quickpad_app_window_add_tab(QuickpadAppWindow * pWindow, gchar * p
     g_signal_connect(pBtnSave,   "clicked", G_CALLBACK(quickpad_clbk_btn_save),   pTabInfo);
     g_signal_connect(pBtnCancel, "clicked", G_CALLBACK(quickpad_clbk_btn_cancel), pTabInfo);
     g_signal_connect(pBtnClose,  "clicked", G_CALLBACK(quickpad_clbk_btn_close),  pTabInfo);
-    g_signal_connect(pWindow->ntbContent, "button-press-event", G_CALLBACK(quickpad_clbk_notebook_evt_buttonpress), pWindow);
+    g_signal_connect(pTabInfo->pTextView, "button-press-event", G_CALLBACK(quickpad_clbk_editor_evt_buttonpress), pTabInfo);
     g_signal_connect(pTabInfo->pBtnLabel, "button-press-event", G_CALLBACK(quickpad_clbk_btnlabel_evt_buttonpress), pTabInfo);
     g_signal_connect(pTabInfo->pTxtLabel, "key-release-event",  G_CALLBACK(quickpad_clbk_entry_evt_keyrelease), pTabInfo);
     g_object_set_data(G_OBJECT(pTabInfo->pPageChild), "tab_info", pTabInfo);
